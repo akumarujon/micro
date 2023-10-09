@@ -10,4 +10,8 @@ app.get("/hello", (_req: Request) => {
     return new Response("No Hello.")
 })
 
+app.post('/', (_req: Request) => {
+    return new Response("POST.")
+})
+
 app.run(3000)
