@@ -1,13 +1,31 @@
+import { Routes } from "./types/route.ts";
+
+let routes: Routes = { "post": [], "get": [] };
 
 class Micro {
-  route(url: string, event: any) {
-    Deno.serve((req) => {
-      const path = new URL(req.url);
-      
-      if(path.pathname == url) return new Response(event())
-
-      else return new Response("Route not found.")
+  get(path: string, event: any) {
+    routes.get.push({
+      path,
+      event,
     });
+  }
+
+  handle(req: Request) {
+    const path = new URL(req.url).pathname;
+    console.log(routes);
+    for (const route of routes.get) {
+      console.log("PATH: ", path);
+      console.log("PATH: ", route.path);
+      if (path == route.path) {
+        return route.event(req);
+      }
+    }
+
+    return new Response("404", { status: 404 });
+  }
+
+  run(port: number | string) {
+    Deno.serve({ port }, this.handle);
   }
 }
 
