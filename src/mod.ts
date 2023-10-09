@@ -11,16 +11,11 @@ class Micro {
     routes.post.push({ path, event });
   }
 
-  handle(req: Request) {
+  async handle(req: Request) {
     const path = new URL(req.url).pathname;
-    console.log(routes);
-
-    console.log(req.method)
 
     if (req.method == "GET") {
       for (const route of routes.get) {
-        console.log("PATH: ", path);
-        console.log("PATH: ", route.path);
         if (path == route.path) {
           return route.event(req);
         }
@@ -29,9 +24,8 @@ class Micro {
 
     if (req.method == "POST") {
       for (const route of routes.post) {
-        console.log("PATH: ", path);
-        console.log("PATH: ", route.path);
         if (path == route.path) {
+          req.jsonBody = new TextDecoder().decode((await req.body?.getReader().read())?.value)
           return route.event(req);
         }
       }
