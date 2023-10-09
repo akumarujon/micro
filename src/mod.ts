@@ -4,20 +4,36 @@ let routes: Routes = { "post": [], "get": [] };
 
 class Micro {
   get(path: string, event: any) {
-    routes.get.push({
-      path,
-      event,
-    });
+    routes.get.push({ path, event });
+  }
+
+  post(path: string, event: any) {
+    routes.post.push({ path, event });
   }
 
   handle(req: Request) {
     const path = new URL(req.url).pathname;
     console.log(routes);
-    for (const route of routes.get) {
-      console.log("PATH: ", path);
-      console.log("PATH: ", route.path);
-      if (path == route.path) {
-        return route.event(req);
+
+    console.log(req.method)
+
+    if (req.method == "GET") {
+      for (const route of routes.get) {
+        console.log("PATH: ", path);
+        console.log("PATH: ", route.path);
+        if (path == route.path) {
+          return route.event(req);
+        }
+      }
+    }
+
+    if (req.method == "POST") {
+      for (const route of routes.post) {
+        console.log("PATH: ", path);
+        console.log("PATH: ", route.path);
+        if (path == route.path) {
+          return route.event(req);
+        }
       }
     }
 
