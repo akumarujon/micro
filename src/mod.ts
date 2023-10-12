@@ -1,5 +1,9 @@
+// deno-lint-ignore-file no-explicit-any
 import { Routes } from "./types/route.ts";
+import { MicroResponse } from "./types/response.ts";
+import { MicroRequest } from "./types/request.ts";
 
+// deno-lint-ignore prefer-const
 let routes: Routes = { "post": [], "get": [] };
 
 class Micro {
@@ -11,13 +15,14 @@ class Micro {
     routes.post.push({ path, event });
   }
 
-  async handle(req: Request) {
+  handle(req: Request) {
     const path = new URL(req.url).pathname;
+    const res = new MicroResponse();
 
     if (req.method == "GET") {
       for (const route of routes.get) {
         if (path == route.path) {
-          return route.event(req);
+          return route.event(req as MicroRequest, res);
         }
       }
     }
@@ -25,8 +30,7 @@ class Micro {
     if (req.method == "POST") {
       for (const route of routes.post) {
         if (path == route.path) {
-          req.jsonBody = new TextDecoder().decode((await req.body?.getReader().read())?.value)
-          return route.event(req);
+          return route.event(req as MicroRequest, res);
         }
       }
     }
@@ -34,7 +38,7 @@ class Micro {
     return new Response("404", { status: 404 });
   }
 
-  run(port: number | string) {
+  run(port: number) {
     Deno.serve({ port }, this.handle);
   }
 }
