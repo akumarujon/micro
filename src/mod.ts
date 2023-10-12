@@ -30,12 +30,10 @@ class Micro {
 
           const key = parts[part].split(":")[1]
           const value = coming_path[part];
-          
+
           route.path = route.path.replace(`:${key}`, value);
 
-          req.params.push(
-            [key, value],
-          );
+          req.params[key] = value;
         }
 
         if (path == route.path) {

@@ -1,5 +1,5 @@
 class MicroRequest extends Request {
-    public params:string[][] = [];
+    public params = {}
 }
 
 class MicroResponse extends Response {
