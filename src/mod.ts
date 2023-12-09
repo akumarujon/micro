@@ -1,5 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
-import { MicroRequest, MicroResponse, Params, Routes } from "./types.ts";
+import { MicroRequest, MicroResponse, Routes } from "./types.ts";
 
 // deno-lint-ignore prefer-const
 let routes: Routes = { "post": [], "get": [] };
@@ -14,10 +14,10 @@ class Micro {
   }
 
   handle(request: Request) {
-    const path = new URL(request.url).pathname;
+    let path = new URL(request.url).pathname;
     const res = new MicroResponse();
 
-    let req = new MicroRequest(request.url)
+    const req = new MicroRequest(request.url)
     if (req.method == "GET") {
       for (const route of routes.get) {
         if (route.path.includes(":")) {
@@ -28,13 +28,16 @@ class Micro {
             parts.filter((part) => part.includes(":"))[0],
           );
 
-          const key = parts[part].split(":")[1]
+          const key: string = parts[part].split(":")[1]
           const value = coming_path[part];
 
           route.path = route.path.replace(`:${key}`, value);
-
+ 
           req.params[key] = value;
         }
+
+        if(!route.path.endsWith("/")) route.path = `${route.path}/`
+        if(!path.endsWith("/")) path = `${path}/`
 
         if (path == route.path) {
           return route.event(req as MicroRequest, res);
