@@ -17,7 +17,7 @@ class Micro {
     let path = new URL(request.url).pathname;
     const res = new MicroResponse();
 
-    const req = new MicroRequest(request.url)
+    const req = new MicroRequest(request.url);
     if (req.method == "GET") {
       for (const route of routes.get) {
         if (route.path.includes(":")) {
@@ -28,16 +28,16 @@ class Micro {
             parts.filter((part) => part.includes(":"))[0],
           );
 
-          const key: string = parts[part].split(":")[1]
+          const key: string = parts[part].split(":")[1];
           const value = coming_path[part];
 
           route.path = route.path.replace(`:${key}`, value);
- 
+
           req.params[key] = value;
         }
 
-        if(!route.path.endsWith("/")) route.path = `${route.path}/`
-        if(!path.endsWith("/")) path = `${path}/`
+        if (!route.path.endsWith("/")) route.path = `${route.path}/`;
+        if (!path.endsWith("/")) path = `${path}/`;
 
         if (path == route.path) {
           return route.event(req as MicroRequest, res);
