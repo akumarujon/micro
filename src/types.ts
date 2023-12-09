@@ -1,13 +1,14 @@
+// deno-lint-ignore-file no-explicit-any
 class MicroRequest extends Request {
-    public params = {}
+    public params: any = {}
 }
 
 class MicroResponse extends Response {
-    jsonify(response): Response {
+    jsonify(response: any): Response {
         return new Response(JSON.stringify(response));
     }
 
-    send(response: string): Response {
+    send(response: any): Response {
       return new Response(response);
     }
 }
