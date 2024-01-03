@@ -20,6 +20,8 @@ class Micro {
     const req = new MicroRequest(request.url);
     if (req.method == "GET") {
       for (const route of routes.get) {
+        if (!route.path.endsWith("/")) route.path = `${route.path}/`;
+
         if (route.path.includes(":")) {
           const parts = route.path.split("/");
           const coming_path = path.split("/");
