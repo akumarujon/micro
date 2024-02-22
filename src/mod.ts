@@ -1,66 +1,104 @@
 // deno-lint-ignore-file no-explicit-any
-import { MicroRequest, MicroResponse, Routes } from "./types.ts";
+// Importing the MicroRequest and MicroResponse classes from the types.ts file
+import { MicroRequest, MicroResponse } from "./types.ts";
 
-// deno-lint-ignore prefer-const
-let routes: Routes = { "post": [], "get": [] };
-
+// Creating a class named Micro
 class Micro {
+  /**
+   * Declaring a read-only property routes as a Map
+   */
+  readonly routes: Map<string, any>;
+
+  /**
+   * Constructor for the Micro class
+   */
+  constructor() {
+    // Initializing the routes property as a new Map
+    this.routes = new Map();
+  }
+
+  /**
+   * Method to add a GET route to the routes Map
+   * @param path - The path for the route
+   * @param event - The event handler for the route
+   */
   get(path: string, event: any) {
-    routes.get.push({ path, event });
+    this.routes.set(path, event);
   }
 
+  /**
+   * Method to add a POST route to the routes Map
+   * @param path - The path for the route
+   * @param event - The event handler for the route
+   */
   post(path: string, event: any) {
-    routes.post.push({ path, event });
+    this.routes.set(path, event);
   }
 
+  /**
+   * Method to handle incoming requests
+   * @param request - The incoming request
+   * @returns A Response object
+   */
   handle(request: Request) {
+    // Extracting the pathname from the request URL
     let path = new URL(request.url).pathname;
+
+    // Creating a new MicroResponse instance
     const res = new MicroResponse();
 
+    // Creating a new MicroRequest instance with the request URL
     const req = new MicroRequest(request.url);
-    if (req.method == "GET") {
-      for (const route of routes.get) {
-        if (!route.path.endsWith("/")) route.path = `${route.path}/`;
 
-        if (route.path.includes(":")) {
-          const parts = route.path.split("/");
-          const coming_path = path.split("/");
+    // Iterating through the routes Map
+    for (const route of this.routes) {
+      // Checking and modifying the route path if necessary
+      if (!route[0].endsWith("/")) route[0] = `${route[0]}/`;
 
-          const part = parts.indexOf(
-            parts.filter((part) => part.includes(":"))[0],
-          );
+      // Checking if the route path includes a parameter
+      if (route[0].includes(":")) {
+        // Splitting the route and incoming path into parts
+        const parts = route[0].split("/");
+        const coming_path = path.split("/");
 
-          const key: string = parts[part].split(":")[1];
-          const value = coming_path[part];
+        // Finding the index of the parameter in the route
+        const part = parts.indexOf(
+          parts.filter((part) => part.includes(":"))[0],
+        );
 
-          route.path = route.path.replace(`:${key}`, value);
+        // Extracting the parameter key and value
+        const key: string = parts[part].split(":")[1];
+        const value = coming_path[part];
 
-          req.params[key] = value;
-        }
+        // Replacing the parameter in the route path and adding to request params
+        route[0] = route[0].replace(`:${key}`, value);
+        req.params[key] = value;
+      }
 
-        if (!route.path.endsWith("/")) route.path = `${route.path}/`;
-        if (!path.endsWith("/")) path = `${path}/`;
+      // Ensuring both the route and incoming path end with a "/"
+      if (!route[0].endsWith("/")) route[0] = `${route[0]}/`;
+      if (!path.endsWith("/")) path = `${path}/`;
 
-        if (path == route.path) {
-          return route.event(req as MicroRequest, res);
-        }
+      // Checking if the path and method match a route in the Map
+      if (path == route[0] && request.method == route[1].method) {
+        // Executing the matched route with the request and response
+        return route[1](req as MicroRequest, res);
       }
     }
 
-    if (req.method == "POST") {
-      for (const route of routes.post) {
-        if (path == route.path) {
-          return route.event(req as MicroRequest, res);
-        }
-      }
-    }
-
+    // Returning a 404 response if no matching route is found
     return new Response("404", { status: 404 });
   }
 
+  /**
+   * Method to start the server and listen on the specified port
+   * @param port - The port number to listen on
+   */
   run(port: number) {
-    Deno.serve({ port }, this.handle);
+    // Using Deno to serve the handle method on the specified port
+    Deno.serve({ port }, (request) => this.handle(request));
   }
 }
 
+// Exporting the Micro class
 export { Micro };
