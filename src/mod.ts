@@ -7,7 +7,7 @@ class Micro {
   /**
    * Declaring a read-only property routes as a Map
    */
-  readonly routes: Map<string, any>;
+  readonly routes: Map<string, [any, string]>;
 
   /**
    * Constructor for the Micro class
@@ -23,7 +23,7 @@ class Micro {
    * @param event - The event handler for the route
    */
   get(path: string, event: any) {
-    this.routes.set(path, event);
+    this.routes.set(path, [event, "GET"]);
   }
 
   /**
@@ -32,7 +32,7 @@ class Micro {
    * @param event - The event handler for the route
    */
   post(path: string, event: any) {
-    this.routes.set(path, event);
+    this.routes.set(path, [event, "POST"]);
   }
 
   /**
@@ -80,9 +80,9 @@ class Micro {
       if (!path.endsWith("/")) path = `${path}/`;
 
       // Checking if the path and method match a route in the Map
-      if (path == route[0] && request.method == route[1].method) {
+      if (path == route[0] && request.method == route[1][1]) {
         // Executing the matched route with the request and response
-        return route[1](req as MicroRequest, res);
+        return route[1][0](req as MicroRequest, res);
       }
     }
 

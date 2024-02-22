@@ -18,4 +18,6 @@ app.post("/post", async (_req: MicroRequest, _res: MicroResponse) => {
   return _res.jsonify(body);
 });
 
+console.log(app.routes);
+
 app.run(3000);
