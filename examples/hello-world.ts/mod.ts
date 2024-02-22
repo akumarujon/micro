@@ -4,9 +4,7 @@ import { MicroRequest, MicroResponse } from "../../src/types.ts";
 const app = new Micro();
 
 app.get("/", (_req: MicroRequest, _res: MicroResponse) => {
-  const response = { "message": "hello" };
-
-  return _res.jsonify(response);
+  return _res.send("OK");
 });
 
 app.get("/:user", (_req: MicroRequest, _res: MicroResponse) => {
