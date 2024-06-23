@@ -1,104 +1,38 @@
-// deno-lint-ignore-file no-explicit-any
-// Importing the MicroRequest and MicroResponse classes from the types.ts file
-import { MicroRequest, MicroResponse } from "./types.ts";
+import { Handler, MicroRequest, MicroResponse, Route } from "./types.ts";
 
-// Creating a class named Micro
-class Micro {
-  /**
-   * Declaring a read-only property routes as a Map
-   */
-  readonly routes: Map<string, [any, string]>;
+export class Micro {
+  private routes: Route[] = [];
 
-  /**
-   * Constructor for the Micro class
-   */
-  constructor() {
-    // Initializing the routes property as a new Map
-    this.routes = new Map();
+  get(path: string, handler: Handler) {
+    this.routes.push({ method: "GET", path, handler });
   }
 
-  /**
-   * Method to add a GET route to the routes Map
-   * @param path - The path for the route
-   * @param event - The event handler for the route
-   */
-  get(path: string, event: any) {
-    this.routes.set(path, [event, "GET"]);
+  post(path: string, handler: Handler) {
+    this.routes.push({ method: "POST", path, handler });
   }
 
-  /**
-   * Method to add a POST route to the routes Map
-   * @param path - The path for the route
-   * @param event - The event handler for the route
-   */
-  post(path: string, event: any) {
-    this.routes.set(path, [event, "POST"]);
+  private findRoute(method: string, url: string) {
+    return this.routes.find((route) =>
+      route.method === method && route.path === url
+    );
   }
 
-  /**
-   * Method to handle incoming requests
-   * @param request - The incoming request
-   * @returns A Response object
-   */
-  handle(request: Request) {
-    // Extracting the pathname from the request URL
-    let path = new URL(request.url).pathname;
+  async handleRequest(req: Request): Promise<Response> {
+    const { method, url } = req;
+    const route = this.findRoute(method, new URL(url).pathname);
 
-    // Creating a new MicroResponse instance
-    const res = new MicroResponse();
-
-    // Creating a new MicroRequest instance with the request URL
-    const req = new MicroRequest(request.url);
-
-    // Iterating through the routes Map
-    for (const route of this.routes) {
-      // Checking and modifying the route path if necessary
-      if (!route[0].endsWith("/")) route[0] = `${route[0]}/`;
-
-      // Checking if the route path includes a parameter
-      if (route[0].includes(":")) {
-        // Splitting the route and incoming path into parts
-        const parts = route[0].split("/");
-        const coming_path = path.split("/");
-
-        // Finding the index of the parameter in the route
-        const part = parts.indexOf(
-          parts.filter((part) => part.includes(":"))[0],
-        );
-
-        // Extracting the parameter key and value
-        const key: string = parts[part].split(":")[1];
-        const value = coming_path[part];
-
-        // Replacing the parameter in the route path and adding to request params
-        route[0] = route[0].replace(`:${key}`, value);
-        req.params[key] = value;
-      }
-
-      // Ensuring both the route and incoming path end with a "/"
-      if (!route[0].endsWith("/")) route[0] = `${route[0]}/`;
-      if (!path.endsWith("/")) path = `${path}/`;
-
-      // Checking if the path and method match a route in the Map
-      if (path == route[0] && request.method == route[1][1]) {
-        // Executing the matched route with the request and response
-        return route[1][0](req as MicroRequest, res);
-      }
+    if (route) {
+      const microReq = new MicroRequest(req);
+      const microRes = new MicroResponse();
+      await route.handler(microReq, microRes);
+      return microRes.toResponse();
     }
 
-    // Returning a 404 response if no matching route is found
-    return new Response("404", { status: 404 });
+    return new Response("Not Found", { status: 404 });
   }
 
-  /**
-   * Method to start the server and listen on the specified port
-   * @param port - The port number to listen on
-   */
-  run(port: number) {
-    // Using Deno to serve the handle method on the specified port
-    Deno.serve({ port }, (request) => this.handle(request));
+  async run(port: number) {
+    console.log(`Server running on port ${port}`);
+    await Deno.serve({ port }, (req) => this.handleRequest(req));
   }
 }
-
-// Exporting the Micro class
-export { Micro };
