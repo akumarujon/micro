@@ -11,6 +11,18 @@ export class Micro {
     this.routes.push({ method: "POST", path, handler });
   }
 
+  delete(path: string, handler: Handler) {
+    this.routes.push({ method: "DELETE", path, handler });
+  }
+
+  patch(path: string, handler: Handler) {
+    this.routes.push({ method: "PATCH", path, handler });
+  }
+
+  put(path: string, handler: Handler) {
+    this.routes.push({ method: "PUT", path, handler });
+  }
+
   private findRoute(method: string, url: string) {
     return this.routes.find((route) =>
       route.method === method && route.path === url
@@ -31,8 +43,8 @@ export class Micro {
     return new Response("Not Found", { status: 404 });
   }
 
-  async run(port: number) {
+  run(port: number) {
     console.log(`Server running on port ${port}`);
-    await Deno.serve({ port }, (req) => this.handleRequest(req));
+    Deno.serve({ port }, (req) => this.handleRequest(req));
   }
 }
